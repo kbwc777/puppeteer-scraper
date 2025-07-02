@@ -1,6 +1,7 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
-const chromium = require('@sparticuz/chromium'); // 👈 正確位置
+const puppeteer = require('puppeteer-core'); // 改為 puppeteer-core
+const chromium = require('@sparticuz/chromium'); // Render 專用無頭 Chromium
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -11,19 +12,17 @@ app.get('/scrape', async (req, res) => {
   try {
     const browser = await puppeteer.launch({
       args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
       headless: chromium.headless,
+      defaultViewport: chromium.defaultViewport,
     });
 
     const page = await browser.newPage();
     const url = `https://www.price.com.hk/search.php?g=A&q=${encodeURIComponent(keyword)}`;
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
-    // 等待價格資料出現（行貨 / 水貨區塊）
     await page.waitForSelector('.line.price-range', { timeout: 15000 });
 
-    // 提取價格範圍
     const prices = await page.evaluate(() => {
       const results = {};
       document.querySelectorAll('.line.price-range').forEach((el) => {
