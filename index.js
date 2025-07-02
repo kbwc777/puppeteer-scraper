@@ -1,5 +1,6 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
+const chromium = require('@sparticuz/chromium'); // 👈 正確位置
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -9,9 +10,12 @@ app.get('/scrape', async (req, res) => {
 
   try {
     const browser = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
     });
+
     const page = await browser.newPage();
     const url = `https://www.price.com.hk/search.php?g=A&q=${encodeURIComponent(keyword)}`;
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
